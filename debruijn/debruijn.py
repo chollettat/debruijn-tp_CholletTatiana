@@ -24,14 +24,14 @@ random.seed(9001)
 from random import randint
 import statistics
 
-__author__ = "Your Name"
+__author__ = "Tatiana Chollet"
 __copyright__ = "Universite Paris Diderot"
-__credits__ = ["Your Name"]
+__credits__ = ["Tatiana Chollet"]
 __license__ = "GPL"
 __version__ = "1.0.0"
-__maintainer__ = "Your Name"
-__email__ = "your@email.fr"
-__status__ = "Developpement"
+__maintainer__ = "Tatiana Chollet"
+__email__ = "chollettat@eisti.eu"
+__status__ = "Developpement - Student"
 
 def isfile(path):
     """Check if path is an existing file.
@@ -66,15 +66,32 @@ def get_arguments():
 
 
 def read_fastq(fastq_file):
-    pass
-
+    file = open(fastq_file, "r")
+    for line in file:
+        yield next(file).strip("\n") #We remove the line break of each line of file
+        next(file)
+        next(file)
 
 def cut_kmer(read, kmer_size):
-    pass
-
+    for comp in range ( (len(read)+1) - kmer_size):
+        kmer = read[comp : comp + kmer_size]
+        yield kmer
 
 def build_kmer_dict(fastq_file, kmer_size):
-    pass
+    dict_kmer = {} #We use {} to use a dictionnary
+    genSeq = read_fastq(fastq_file)
+
+    for seq in genSeq:
+        genKmer = cut_kmer(seq, kmer_size)
+
+        for kmer in genKmer:
+            if kmer in dict_kmer: #Count occurence for each kmer
+                dict_kmer[kmer] += 1
+            else:
+                dict_kmer[kmer] = 1
+    return dict_kmer
+
+
 
 
 def build_graph(kmer_dict):
