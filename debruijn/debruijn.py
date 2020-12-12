@@ -66,16 +66,18 @@ def get_arguments():
 
 
 def read_fastq(fastq_file):
-    file = open(fastq_file, "r")
+    file = open(fastq_file, 'r')
     for line in file:
-        yield next(file).strip("\n") #We remove the line break of each line of file
+        yield next(file).strip('\n') #We remove the line break of each line of file
         next(file)
         next(file)
+
 
 def cut_kmer(read, kmer_size):
     for comp in range ( (len(read)+1) - kmer_size):
         kmer = read[comp : comp + kmer_size]
         yield kmer
+
 
 def build_kmer_dict(fastq_file, kmer_size):
     dict_kmer = {} #We use {} to use a dictionnary
@@ -89,13 +91,16 @@ def build_kmer_dict(fastq_file, kmer_size):
                 dict_kmer[kmer] += 1
             else:
                 dict_kmer[kmer] = 1
+
     return dict_kmer
 
+#kmer1.pck and test_construction_debruijn.py were changed because I'm on Windows
+def build_graph(kmer_dict): #kmer_dict = dict_kmer from build_kmer_dict
+    treeKmer = nx.DiGraph()
+    for kmer, weight in kmer_dict.items():
+        treeKmer.add_edge(kmer[:-1], kmer[1:], weight=weight) #kmer[:-1] slice before  = prefix / kmer[1:] slice after = suffix
 
-
-
-def build_graph(kmer_dict):
-    pass
+    return treeKmer
 
 
 def remove_paths(graph, path_list, delete_entry_node, delete_sink_node):
