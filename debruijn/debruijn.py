@@ -381,7 +381,7 @@ def main():
     #NF graph = solve_out_tips(graph, ending_nodes)
 
     # Get then save contigs
-    contigs_list = get_contigs(graph, starting_nodes, sink_nodes)
+    contigs_list = get_contigs(graph, starting_nodes, ending_nodes)
     save_contigs(contigs_list,output_file)
 
     # Draw graph
