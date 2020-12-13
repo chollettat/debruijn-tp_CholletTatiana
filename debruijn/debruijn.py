@@ -189,12 +189,12 @@ def select_best_path(graph, path_list, path_length, weight_avg_list,
     best_length_p = []
     best_weight_p = []
     for comp in range(len(path_list)): #We go through the list of paths
-        if(weight_avg_list[comp]==max(weight_avg_list)):
+        if weight_avg_list[comp]==max(weight_avg_list):
             best_weight_p.append(path_list[comp]) #Stock path with max weight
 
         for comp_bis in range(len(best_weight_p)):
-            max_length = len(best_weight_p[comp_bis])
-            if (max_length > 0):
+            len_max = len(best_weight_p[comp_bis])
+            if len_max > 0:
                 best_length_p.append(best_weight_p[comp_bis])
 
     best_path = random.choice(best_length_p)
@@ -246,6 +246,20 @@ def simplify_bubbles(graph):
         graph: oriented and weighted tree (nx.digraph)
     Returns: Graph without bubbles
     """
+    ancestors = []
+    descendants = []
+    for node in graph.nodes:
+        successor_list = list(graph.successors(node)) #collect a list of successors of node
+        predecessor_list = list(graph.predecessors(node)) #same with predecessors
+        if len(successor_list) > 1: #if successor -> ancestor
+            ancestors.append(node)
+        if len(predecessor_list) > 1: #if predecessor -> descendant
+            descendants.append(node)
+
+    for comp_anc in range(len(ancestors)):
+        for comp_desc in range(len(descendants)):
+            if ancestors[comp_anc] != descendants[comp_desc]: #if bubble
+                graph = solve_bubble(graph, ancestors[comp_anc], descendants[comp_desc])
     return graph
 
 
