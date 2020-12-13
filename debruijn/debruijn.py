@@ -16,13 +16,18 @@
 import argparse
 import os
 import sys
-import networkx as nx
-import matplotlib
-from operator import itemgetter
 import random
+#pylint: disable=wrong-import-position
 random.seed(9001)
 from random import randint
+#pylint: enable=wrong-import-position
 import statistics
+#pylint: disable=wrong-import-position
+from operator import itemgetter
+#pylint: enable=wrong-import-position
+import matplotlib.pyplot as plt
+import networkx as nx
+
 
 __author__ = "Tatiana Chollet"
 __copyright__ = "Universite Paris Diderot"
@@ -134,27 +139,70 @@ def build_graph(kmer_dict): #kmer_dict = dict_kmer from build_kmer_dict
 
     return tree_kmer
 
-
+## Simplification of de Bruijn's graph
+# Bubble resolution
 def remove_paths(graph, path_list, delete_entry_node, delete_sink_node):
-    pass
+    """
+    Clean the graph
+    :Parameters:
+        graph: oriented and weighted tree (nx.digraph)
+        path_list: list of paths
+        delete_entry_node: indicate whether the input nodes will be deleted
+        delete_sink_node: indicate whether the output nodes will be deleted
+    Returns: graph cleaned of unwanted paths
+    """
 
 def std(data):
-    pass
+    """
+    Calculate the standard deviation
+    :Parameters:
+        data: list of values
+    Returns: standard deviation
+    """
+    return statistics.stdev(data)
 
 
 def select_best_path(graph, path_list, path_length, weight_avg_list,
                      delete_entry_node=False, delete_sink_node=False):
-    pass
+    """
+    Select best path
+    :Parameters:
+        graph: oriented and weighted tree (nx.digraph)
+        path_list: list of paths
+        path_length: length of each path
+        weight_avg_list: list of average weight
+    Returns: graph cleaned of unwanted paths
+    """
 
 def path_average_weight(graph, path):
-    pass
+    """
+    Calculate an average of weight of a path
+    :Parameters:
+        graph: oriented and weighted tree (nx.digraph)
+        path: path of graph
+    Returns: average of weight
+    """
 
 def solve_bubble(graph, ancestor_node, descendant_node):
-    pass
+    """
+    Clean graph
+    :Parameters:
+        graph: oriented and weighted tree (nx.digraph)
+        ancestor_node
+        descendant_node
+    Returns: Clean graph of the bubble located between these two nodes
+    """
 
 def simplify_bubbles(graph):
-    pass
+    """
+    Simplify the graph
+    :Parameters:
+        graph: oriented and weighted tree (nx.digraph)
+    Returns: Graph without bubbles
+    """
 
+
+# Spike detection
 def solve_entry_tips(graph, starting_nodes):
     pass
 
@@ -229,8 +277,8 @@ def save_contigs(contigs_list, output_file): #AssertionError in tests with Windo
     """
     file = open(output_file, "w")
     index = 0
-    for contig, sizeOfContig in contigs_list:
-        file.write(">contig_"+str(index)+" len="+str(sizeOfContig)+"\n")
+    for contig, size_contig in contigs_list:
+        file.write(">contig_"+str(index)+" len="+str(size_contig)+"\n")
         file.write(fill(contig, width=80)+"\n")
         index += 1
 
@@ -243,18 +291,13 @@ def draw_graph(graph, graphimg_file):
         graphimg_file: file name .png
     Returns: /
     """
-    fig, ax = plt.subplots()
     elarge = [(u,v) for (u,v,d) in graph.edges(data=True) if d['weight'] > 3]
-    #print(elarge)
     esmall = [(u,v) for (u,v,d) in graph.edges(data=True) if d['weight'] <= 3]
-    #print(esmall)
-    #pos = nx.spring_layout(graph)
     pos = nx.random_layout(graph)
     nx.draw_networkx_nodes(graph, pos, node_size=6)
     nx.draw_networkx_edges(graph, pos, edgelist=elarge, width=6)
     nx.draw_networkx_edges(graph, pos, edgelist=esmall, width=6, alpha=0.5,
                 edge_color='b', style='dashed')
-    #nx.draw_networkx(graph, pos, node_size=10, with_labels=False)
     # save image
     plt.savefig(graphimg_file)
 
@@ -276,17 +319,26 @@ def main():
     kmer_size = args.kmer_size
     output_file = args.output_file
 
-    # Build the graph
+    # Read file and build the graph
     kmer_dict = build_kmer_dict(fastq_file,kmer_size)
     graph = build_graph(kmer_dict)
 
-    #
+    # Simplify bubbles
+    graph = simplify_bubbles(graph)
+
+    # Solve entry tips
     starting_nodes = get_starting_nodes(graph)
-    sink_nodes = get_sink_nodes(graph)
+    graph = solve_entry_tips(graph, starting_nodes)
+
+    # Solve out tips
+    ending_nodes = get_sink_nodes(graph)
+    graph = solve_out_tips(graph, ending_nodes)
 
     # Get then save contigs
     contigs_list = get_contigs(graph, starting_nodes, sink_nodes)
     save_contigs(contigs_list,output_file)
 
+    # Draw graph
+    draw_graph(graph, 'graphimg')
 if __name__ == '__main__':
     main()
