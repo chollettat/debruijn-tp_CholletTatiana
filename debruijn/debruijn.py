@@ -139,6 +139,7 @@ def build_graph(kmer_dict): #kmer_dict = dict_kmer from build_kmer_dict
 
     return tree_kmer
 
+
 ## Simplification of de Bruijn's graph
 # Bubble resolution
 def remove_paths(graph, path_list, delete_entry_node, delete_sink_node):
@@ -151,6 +152,18 @@ def remove_paths(graph, path_list, delete_entry_node, delete_sink_node):
         delete_sink_node: indicate whether the output nodes will be deleted
     Returns: graph cleaned of unwanted paths
     """
+    #We verify each case of delete_entry_node and delete_sink_node
+    for node in path_list:
+        if not delete_entry_node and not delete_sink_node: #if both False
+            graph.remove_nodes_from(node[1:-1]) #remove first and last node
+        elif delete_entry_node and not delete_sink_node:
+            graph.remove_nodes_from(node[:-1]) #remove first node
+        elif not delete_entry_node and delete_sink_node:
+            graph.remove_nodes_from(node[1:]) #remove last node
+        else:
+            graph.remove_nodes_from(node) #if both True
+    return graph
+
 
 def std(data):
     """
@@ -173,6 +186,8 @@ def select_best_path(graph, path_list, path_length, weight_avg_list,
         weight_avg_list: list of average weight
     Returns: graph cleaned of unwanted paths
     """
+    return graph
+
 
 def path_average_weight(graph, path):
     """
@@ -182,6 +197,12 @@ def path_average_weight(graph, path):
         path: path of graph
     Returns: average of weight
     """
+    avg=0
+    len_path = len(path)-1 #-1 avoid index of out range
+    for comp in range(len_path):
+        avg += graph[path[comp]][path[comp+1]]["weight"]
+    return avg / len_path
+
 
 def solve_bubble(graph, ancestor_node, descendant_node):
     """
@@ -192,6 +213,15 @@ def solve_bubble(graph, ancestor_node, descendant_node):
         descendant_node
     Returns: Clean graph of the bubble located between these two nodes
     """
+    path_length = []
+    weight_avg_list = []
+    path_list = list(nx.all_simple_paths(graph, source=ancestor_node, target=descendant_node))
+    for path in path_list:
+        path_length.append(len(path))
+        weight_avg_list.append(path_average_weight(graph,path))
+    graph = select_best_path(graph, path_list, path_length, weight_avg_list)
+    return graph
+
 
 def simplify_bubbles(graph):
     """
@@ -200,11 +230,13 @@ def simplify_bubbles(graph):
         graph: oriented and weighted tree (nx.digraph)
     Returns: Graph without bubbles
     """
+    return graph
 
 
-# Spike detection
+# Spike detection - NF too long..
 def solve_entry_tips(graph, starting_nodes):
     pass
+
 
 def solve_out_tips(graph, ending_nodes):
     pass
@@ -261,7 +293,6 @@ def get_contigs(graph, starting_nodes, ending_nodes):
     return contigs_list
 
 
-
 def fill(text, width=80):
     """Split text with a line return to respect fasta format"""
     return os.linesep.join(text[i:i+width] for i in range(0, len(text), width))
@@ -303,7 +334,6 @@ def draw_graph(graph, graphimg_file):
 
 
 
-
 #==============================================================
 # Main program
 #==============================================================
@@ -328,11 +358,11 @@ def main():
 
     # Solve entry tips
     starting_nodes = get_starting_nodes(graph)
-    graph = solve_entry_tips(graph, starting_nodes)
+    #NF graph = solve_entry_tips(graph, starting_nodes)
 
     # Solve out tips
     ending_nodes = get_sink_nodes(graph)
-    graph = solve_out_tips(graph, ending_nodes)
+    #NF graph = solve_out_tips(graph, ending_nodes)
 
     # Get then save contigs
     contigs_list = get_contigs(graph, starting_nodes, sink_nodes)
